@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SparRechner – Wo kaufe ich am günstigsten?</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #f5f4ef;
+    --surface: #ffffff;
+    --surface2: #f0efe9;
+    --border: #e2e0d8;
+    --text: #1a1916;
+    --text2: #6b6860;
+    --text3: #a8a59e;
+    --green: #1a7a4a;
+    --green-bg: #e8f5ee;
+    --green-mid: #2ea865;
+    --amber: #9a5c00;
+    --amber-bg: #fff3dc;
+    --red: #c0392b;
+    --red-bg: #fdf0ee;
+    --blue: #1a5fb4;
+    --blue-bg: #e8f0fb;
+    --lidl: #0050aa;
+    --rewe: #cc0000;
+    --aldi: #00539f;
+    --edeka: #ffcc00;
+    --edeka-text: #1a1916;
+    --penny: #cc0000;
+    --netto: #f5c900;
+    --netto-text: #1a1916;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  header {
+    background: var(--text);
+    color: #fff;
+    padding: 20px 24px 18px;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  header h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
+  header span { font-size: 13px; color: #888; font-weight: 300; }
+
+  .main { max-width: 900px; margin: 0 auto; padding: 20px 16px 60px; }
+
+  /* ── Shop selector ── */
+  .shops-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .shop-btn {
+    display: flex; align-items: center; gap: 7px;
+    padding: 8px 14px; border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--surface); cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500; color: var(--text2);
+    transition: all 0.15s;
+  }
+  .shop-btn .dot { width: 9px; height: 9px; border-radius: 50%; }
+  .shop-btn.active { color: var(--text); border-color: var(--text); background: var(--surface); }
+  .shop-btn:hover { border-color: var(--text3); }
+
+  /* ── Add item form ── */
+  .add-form {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  .add-form h2 { font-size: 14px; font-weight: 500; margin-bottom: 12px; color: var(--text2); }
+  .form-grid {
+    display: grid;
+    grid-template-columns: 2fr repeat(var(--shop-cols, 2), 1fr) auto;
+    gap: 8px;
+    align-items: end;
+  }
+  .field label { font-size: 11px; font-weight: 500; color: var(--text3); margin-bottom: 4px; display: block; text-transform: uppercase; letter-spacing: 0.05em; }
+  .field input {
+    width: 100%; padding: 9px 11px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; color: var(--text);
+    background: var(--bg);
+    outline: none; transition: border-color 0.15s;
+  }
+  .field input:focus { border-color: var(--text); background: #fff; }
+  .field input[type=number] { font-family: 'DM Mono', monospace; }
+  .add-btn {
+    padding: 9px 18px;
+    background: var(--text); color: #fff;
+    border: none; border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500;
+    cursor: pointer; white-space: nowrap;
+    transition: opacity 0.15s;
+    height: 38px;
+  }
+  .add-btn:hover { opacity: 0.85; }
+
+  /* ── Items table ── */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .table-wrap table {
+    width: 100%; border-collapse: collapse;
+    font-size: 13px;
+  }
+  .table-wrap thead tr {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .table-wrap th {
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px; font-weight: 500;
+    color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .table-wrap th.num { text-align: right; }
+  .table-wrap td { padding: 11px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .table-wrap tr:last-child td { border-bottom: none; }
+  .table-wrap tr:hover td { background: var(--bg); }
+  .price-cell { text-align: right; font-family: 'DM Mono', monospace; font-size: 13px; }
+  .best-price { color: var(--green); font-weight: 600; }
+  .no-price { color: var(--text3); }
+  .item-name { font-weight: 500; }
+  .qty-badge {
+    display: inline-block; font-size: 11px; font-family: 'DM Mono', monospace;
+    color: var(--text3); margin-left: 5px;
+  }
+  .del-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--text3); font-size: 16px; padding: 2px 6px;
+    border-radius: 4px; transition: color 0.15s;
+  }
+  .del-btn:hover { color: var(--red); }
+  .shop-badge {
+    display: inline-block; padding: 2px 8px;
+    border-radius: 20px; font-size: 11px; font-weight: 600;
+    color: #fff;
+  }
+  .empty-state { padding: 32px; text-align: center; color: var(--text3); font-size: 13px; }
+
+  /* ── Results ── */
+  .results {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .result-card.winner {
+    border-color: var(--green-mid);
+    border-width: 2px;
+  }
+  .result-card .winner-tag {
+    position: absolute; top: 0; right: 0;
+    background: var(--green-mid); color: #fff;
+    font-size: 10px; font-weight: 600;
+    padding: 3px 10px; border-radius: 0 var(--radius) 0 var(--radius-sm);
+    letter-spacing: 0.05em;
+  }
+  .result-card .shop-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .result-card .total { font-size: 28px; font-weight: 600; font-family: 'DM Mono', monospace; margin: 6px 0; }
+  .result-card .items-info { font-size: 12px; color: var(--text2); }
+  .result-card .missing { font-size: 11px; color: var(--amber); margin-top: 4px; }
+
+  /* ── Split shop optimizer ── */
+  .optimizer {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  .optimizer h2 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .optimizer .sub { font-size: 12px; color: var(--text2); margin-bottom: 14px; }
+  .opt-savings {
+    display: flex; align-items: baseline; gap: 8px;
+    margin-bottom: 12px;
+  }
+  .opt-savings .amount { font-size: 32px; font-weight: 600; font-family: 'DM Mono', monospace; color: var(--green); }
+  .opt-savings .label { font-size: 13px; color: var(--text2); }
+  .shop-list { display: flex; flex-direction: column; gap: 8px; }
+  .shop-section {
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    border-left: 3px solid #ccc;
+  }
+  .shop-section-head { font-size: 13px; font-weight: 600; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+  .shop-section-total { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 600; color: var(--green); }
+  .shop-item-row { font-size: 12px; color: var(--text2); display: flex; justify-content: space-between; padding: 2px 0; }
+  .shop-item-price { font-family: 'DM Mono', monospace; color: var(--text); }
+
+  .no-data { padding: 20px; text-align: center; color: var(--text3); font-size: 13px; }
+
+  /* ── Import/Export ── */
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .act-btn {
+    padding: 7px 14px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface); cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px; font-weight: 500; color: var(--text2);
+    transition: all 0.15s;
+  }
+  .act-btn:hover { border-color: var(--text); color: var(--text); }
+
+  /* sample data notice */
+  .notice {
+    background: var(--blue-bg);
+    border: 1px solid #b8d0f0;
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 12px; color: var(--blue);
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  @media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr 1fr; }
+    .form-grid .field:first-child { grid-column: 1 / -1; }
+    .form-grid .add-btn { grid-column: 1 / -1; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>SparRechner</h1>
+  <span>Wo kaufe ich am günstigsten?</span>
+</header>
+
+<div class="main">
+
+  <!-- Notice -->
+  <div class="notice">
+    ℹ️ Beispieldaten vorgeladen. Preise anpassen oder eigene Produkte hinzufügen.
+  </div>
+
+  <!-- Shop selector -->
+  <div style="margin-bottom:8px; font-size:12px; color:var(--text3); font-weight:500; text-transform:uppercase; letter-spacing:.05em;">Meine Supermärkte</div>
+  <div class="shops-row" id="shopsRow"></div>
+
+  <!-- Add item form -->
+  <div class="add-form">
+    <h2>Produkt hinzufügen</h2>
+    <div class="form-grid" id="addForm">
+      <div class="field">
+        <label>Produkt</label>
+        <input type="text" id="newItem" placeholder="z.B. Vollmilch 1L" />
+      </div>
+      <div class="field">
+        <label>Menge</label>
+        <input type="number" id="newQty" value="1" min="1" max="99" style="width:70px;" />
+      </div>
+      <!-- shop price inputs injected by JS -->
+      <button class="add-btn" onclick="addItem()">+ Hinzufügen</button>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="actions">
+    <button class="act-btn" onclick="loadSample()">🧪 Beispieldaten laden</button>
+    <button class="act-btn" onclick="clearAll()">🗑 Liste leeren</button>
+    <button class="act-btn" onclick="exportCSV()">⬇ CSV exportieren</button>
+  </div>
+
+  <!-- Items table -->
+  <div class="table-wrap" id="tableWrap">
+    <div class="empty-state">Noch keine Produkte. Füge oben Artikel hinzu.</div>
+  </div>
+
+  <!-- Per-shop totals -->
+  <div class="results" id="results"></div>
+
+  <!-- Split optimizer -->
+  <div class="optimizer" id="optimizer">
+    <div class="no-data">Füge Produkte mit Preisen hinzu, um die optimale Einkaufsroute zu berechnen.</div>
+  </div>
+
+</div>
+
+<script>
+const SHOPS_DATA = [
+  { id:'lidl',  name:'Lidl',  color:'#0050aa' },
+  { id:'rewe',  name:'Rewe',  color:'#cc0000' },
+  { id:'aldi',  name:'Aldi',  color:'#00539f' },
+  { id:'edeka', name:'Edeka', color:'#e6a800' },
+  { id:'penny', name:'Penny', color:'#dd0000' },
+  { id:'netto', name:'Netto', color:'#d4a800' },
+];
+
+let activeShops = ['lidl','rewe','aldi'];
+let items = [];
+let nextId = 1;
+
+function save() {
+  localStorage.setItem('sparrechner_items', JSON.stringify(items));
+  localStorage.setItem('sparrechner_shops', JSON.stringify(activeShops));
+}
+function load() {
+  const i = localStorage.getItem('sparrechner_items');
+  const s = localStorage.getItem('sparrechner_shops');
+  if (i) items = JSON.parse(i);
+  if (s) activeShops = JSON.parse(s);
+  if (items.length) nextId = Math.max(...items.map(x=>x.id)) + 1;
+}
+
+function getShop(id) { return SHOPS_DATA.find(s=>s.id===id); }
+function activeShopObjs() { return activeShops.map(id=>getShop(id)); }
+
+function renderShopSelector() {
+  const row = document.getElementById('shopsRow');
+  row.innerHTML = SHOPS_DATA.map(s => {
+    const on = activeShops.includes(s.id);
+    return `<button class="shop-btn ${on?'active':''}" onclick="toggleShop('${s.id}')">
+      <span class="dot" style="background:${s.color}"></span>${s.name}
+    </button>`;
+  }).join('');
+}
+
+function renderAddForm() {
+  const form = document.getElementById('addForm');
+  // rebuild: item name, qty, then one price field per active shop, then button
+  const priceFields = activeShopObjs().map(s =>
+    `<div class="field">
+      <label style="color:${s.color}">${s.name} (€)</label>
+      <input type="number" id="price_${s.id}" placeholder="–" min="0" step="0.01" />
+    </div>`
+  ).join('');
+  form.innerHTML = `
+    <div class="field">
+      <label>Produkt</label>
+      <input type="text" id="newItem" placeholder="z.B. Vollmilch 1L" onkeydown="if(event.key==='Enter')addItem()" />
+    </div>
+    <div class="field">
+      <label>Menge</label>
+      <input type="number" id="newQty" value="1" min="1" max="99" style="width:70px;" />
+    </div>
+    ${priceFields}
+    <button class="add-btn" onclick="addItem()">+ Hinzufügen</button>
+  `;
+  form.style.setProperty('--shop-cols', activeShops.length);
+}
+
+function toggleShop(id) {
+  if (activeShops.includes(id)) {
+    if (activeShops.length <= 1) return;
+    activeShops = activeShops.filter(s=>s!==id);
+  } else {
+    activeShops.push(id);
+  }
+  save(); renderAll();
+}
+
+function addItem() {
+  const name = document.getElementById('newItem').value.trim();
+  const qty = parseInt(document.getElementById('newQty').value) || 1;
+  if (!name) { document.getElementById('newItem').focus(); return; }
+  const prices = {};
+  activeShops.forEach(sid => {
+    const v = parseFloat(document.getElementById('price_'+sid).value);
+    if (!isNaN(v) && v > 0) prices[sid] = Math.round(v*100)/100;
+  });
+  items.push({ id: nextId++, name, qty, prices });
+  save(); renderAll();
+  document.getElementById('newItem').value = '';
+  activeShops.forEach(sid => document.getElementById('price_'+sid).value = '');
+  document.getElementById('newItem').focus();
+}
+
+function deleteItem(id) {
+  items = items.filter(i=>i.id!==id);
+  save(); renderAll();
+}
+
+function fmt(v) { return v.toFixed(2).replace('.',',') + ' €'; }
+
+function renderTable() {
+  const wrap = document.getElementById('tableWrap');
+  if (!items.length) {
+    wrap.innerHTML = '<div class="empty-state">Noch keine Produkte. Füge oben Artikel hinzu.</div>';
+    return;
+  }
+  const shops = activeShopObjs();
+  const headers = shops.map(s =>
+    `<th class="num" style="color:${s.color}">${s.name}</th>`
+  ).join('');
+
+  const rows = items.map(item => {
+    // find cheapest among active shops with a price
+    const pricesAvail = activeShops.filter(sid => item.prices[sid] != null);
+    const cheapestSid = pricesAvail.length
+      ? pricesAvail.reduce((a,b) => item.prices[a] <= item.prices[b] ? a : b)
+      : null;
+
+    const priceCells = activeShops.map(sid => {
+      const p = item.prices[sid];
+      if (p == null) return `<td class="price-cell no-price">–</td>`;
+      const total = Math.round(p * item.qty * 100) / 100;
+      const isBest = sid === cheapestSid && pricesAvail.length > 1;
+      return `<td class="price-cell ${isBest?'best-price':''}">${fmt(total)}${item.qty>1?`<br><span style="font-size:10px;color:var(--text3)">${fmt(p)}/Stk</span>`:''}</td>`;
+    }).join('');
+
+    return `<tr>
+      <td class="item-name">${item.name}<span class="qty-badge">×${item.qty}</span></td>
+      ${priceCells}
+      <td><button class="del-btn" onclick="deleteItem(${item.id})" title="Löschen">×</button></td>
+    </tr>`;
+  }).join('');
+
+  wrap.innerHTML = `<table>
+    <thead><tr><th>Produkt</th>${headers}<th></th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+function renderResults() {
+  const el = document.getElementById('results');
+  if (!items.length) { el.innerHTML = ''; return; }
+
+  const shopTotals = activeShops.map(sid => {
+    const shop = getShop(sid);
+    let total = 0, covered = 0, missing = [];
+    items.forEach(item => {
+      if (item.prices[sid] != null) {
+        total += item.prices[sid] * item.qty;
+        covered++;
+      } else {
+        missing.push(item.name);
+      }
+    });
+    return { sid, shop, total: Math.round(total*100)/100, covered, missing };
+  }).filter(s => s.covered > 0)
+    .sort((a,b) => {
+      // sort by: covered desc, then total asc
+      if (b.covered !== a.covered) return b.covered - a.covered;
+      return a.total - b.total;
+    });
+
+  if (!shopTotals.length) { el.innerHTML = ''; return; }
+  const winner = shopTotals[0];
+
+  el.innerHTML = shopTotals.map((s, i) => {
+    const isWinner = i === 0;
+    const savings = i > 0 && s.covered === winner.covered
+      ? `Spare ${fmt(s.total - winner.total)} mehr bei ${winner.shop.name}`
+      : '';
+    return `<div class="result-card ${isWinner?'winner':''}">
+      ${isWinner ? '<div class="winner-tag">BESTE WAHL</div>' : ''}
+      <div class="shop-name" style="color:${s.shop.color}">${s.shop.name}</div>
+      <div class="total">${fmt(s.total)}</div>
+      <div class="items-info">${s.covered} von ${items.length} Produkten</div>
+      ${s.missing.length ? `<div class="missing">⚠ Nicht verfügbar: ${s.missing.slice(0,3).join(', ')}${s.missing.length>3?` +${s.missing.length-3}`:''}</div>` : ''}
+      ${savings ? `<div style="font-size:11px;color:var(--text3);margin-top:4px;">${savings}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderOptimizer() {
+  const el = document.getElementById('optimizer');
+
+  if (!items.length) {
+    el.innerHTML = '<div class="no-data">Füge Produkte mit Preisen hinzu, um die optimale Einkaufsroute zu berechnen.</div>';
+    return;
+  }
+
+  // For each item, find the cheapest shop (among active shops with a price)
+  let totalOptimal = 0;
+  let totalBestSingle = Infinity;
+  const shopAllocs = {}; // sid -> [{item, price}]
+
+  items.forEach(item => {
+    const avail = activeShops.filter(sid => item.prices[sid] != null);
+    if (!avail.length) return;
+    const cheapSid = avail.reduce((a,b) => item.prices[a] <= item.prices[b] ? a : b);
+    const lineTotal = Math.round(item.prices[cheapSid] * item.qty * 100) / 100;
+    totalOptimal += lineTotal;
+    if (!shopAllocs[cheapSid]) shopAllocs[cheapSid] = [];
+    shopAllocs[cheapSid].push({ item, price: item.prices[cheapSid], lineTotal });
+  });
+  totalOptimal = Math.round(totalOptimal * 100) / 100;
+
+  // best single shop
+  activeShops.forEach(sid => {
+    let t = 0, allCovered = true;
+    items.forEach(item => {
+      if (item.prices[sid] != null) t += item.prices[sid] * item.qty;
+      else allCovered = false;
+    });
+    if (allCovered) totalBestSingle = Math.min(totalBestSingle, t);
+  });
+
+  const savings = totalBestSingle !== Infinity
+    ? Math.max(0, Math.round((totalBestSingle - totalOptimal) * 100) / 100)
+    : null;
+
+  const shopSections = Object.entries(shopAllocs).map(([sid, allocs]) => {
+    const shop = getShop(sid);
+    const shopTotal = allocs.reduce((s,a)=>s+a.lineTotal,0);
+    const rows = allocs.map(a =>
+      `<div class="shop-item-row">
+        <span>${a.item.name}${a.item.qty>1?` ×${a.item.qty}`:''}</span>
+        <span class="shop-item-price">${fmt(a.lineTotal)}</span>
+      </div>`
+    ).join('');
+    return `<div class="shop-section" style="border-left-color:${shop.color}">
+      <div class="shop-section-head">
+        <span style="color:${shop.color}">${shop.name}</span>
+        <span class="shop-section-total">${fmt(Math.round(shopTotal*100)/100)}</span>
+      </div>
+      ${rows}
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <h2>Optimale Einkaufsroute</h2>
+    <div class="sub">Jedes Produkt beim günstigsten Supermarkt kaufen</div>
+    ${savings !== null ? `
+    <div class="opt-savings">
+      <span class="amount">${fmt(savings)}</span>
+      <span class="label">gespart gegenüber einem einzigen Laden</span>
+    </div>` : `
+    <div style="font-size:12px;color:var(--text2);margin-bottom:12px;">Tipp: Trage Preise in mehreren Geschäften ein, um die genaue Ersparnis zu sehen.</div>
+    `}
+    <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:8px;">Gesamt optimal: <strong style="color:var(--green);font-family:'DM Mono',monospace">${fmt(totalOptimal)}</strong></div>
+    <div class="shop-list">${shopSections}</div>
+  `;
+}
+
+function renderAll() {
+  renderShopSelector();
+  renderAddForm();
+  renderTable();
+  renderResults();
+  renderOptimizer();
+}
+
+function loadSample() {
+  items = [
+    { id:nextId++, name:'Vollmilch 1L', qty:2, prices:{ lidl:0.89, rewe:1.09, aldi:0.85, edeka:1.19 } },
+    { id:nextId++, name:'Äpfel 1kg', qty:1, prices:{ lidl:1.49, rewe:1.99, aldi:1.39, penny:1.59 } },
+    { id:nextId++, name:'Bananen 1kg', qty:1, prices:{ lidl:0.99, rewe:1.29, aldi:0.95, edeka:1.39 } },
+    { id:nextId++, name:'Joghurt Natur 500g', qty:2, prices:{ lidl:0.59, rewe:0.79, aldi:0.55, netto:0.65 } },
+    { id:nextId++, name:'Vollkornbrot 500g', qty:1, prices:{ rewe:1.89, edeka:2.09, penny:1.69 } },
+    { id:nextId++, name:'Eier 10er', qty:1, prices:{ lidl:2.19, rewe:2.49, aldi:2.09, edeka:2.79 } },
+    { id:nextId++, name:'Olivenöl 500ml', qty:1, prices:{ lidl:3.99, rewe:4.99, aldi:3.79, edeka:5.49 } },
+    { id:nextId++, name:'Hähnchenbrust 500g', qty:1, prices:{ lidl:3.49, rewe:4.29, aldi:3.29, edeka:4.69 } },
+    { id:nextId++, name:'Nudeln 500g', qty:2, prices:{ lidl:0.69, rewe:0.99, aldi:0.65, netto:0.75 } },
+    { id:nextId++, name:'Tomaten 500g', qty:1, prices:{ lidl:1.29, rewe:1.69, aldi:1.19, penny:1.39 } },
+  ];
+  activeShops = ['lidl','rewe','aldi','edeka'];
+  save(); renderAll();
+}
+
+function clearAll() {
+  if (confirm('Alle Produkte löschen?')) { items = []; save(); renderAll(); }
+}
+
+function exportCSV() {
+  const shops = activeShopObjs();
+  const header = ['Produkt','Menge', ...shops.map(s=>s.name)].join(';');
+  const rows = items.map(item =>
+    [item.name, item.qty, ...activeShops.map(sid => item.prices[sid]!=null ? item.prices[sid].toFixed(2).replace('.',',') : '')].join(';')
+  );
+  const csv = [header, ...rows].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
+  a.download = 'einkaufsliste.csv';
+  a.click();
+}
+
+// Init
+load();
+if (!items.length) loadSample();
+renderAll();
+</script>
+</body>
+</html>
