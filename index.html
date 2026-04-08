@@ -4,6 +4,79 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SparRechner – Wo kaufe ich am günstigsten?</title>
+<script>
+// ── Language strings ──
+const LANG = {
+  de: {
+    tagline: 'Wo kaufe ich am günstigsten?',
+    myShops: 'Meine Supermärkte',
+    addProduct: 'Produkt hinzufügen',
+    product: 'Produkt',
+    qty: 'Menge',
+    placeholder: 'z.B. Vollmilch 1L',
+    addBtn: '+ Hinzufügen',
+    sampleBtn: '🧪 Beispieldaten laden',
+    clearBtn: '🗑 Liste leeren',
+    exportBtn: '⬇ CSV exportieren',
+    emptyTable: 'Noch keine Produkte. Füge oben Artikel hinzu.',
+    noData: 'Füge Produkte mit Preisen hinzu, um die optimale Einkaufsroute zu berechnen.',
+    notice: 'Beispieldaten vorgeladen. Preise anpassen oder eigene Produkte hinzufügen.',
+    bestChoice: 'BESTE WAHL',
+    of: 'von',
+    products: 'Produkten',
+    notAvail: '⚠ Nicht verfügbar:',
+    saveVs: 'günstiger als',
+    fullCoverage: '✓ Alles verfügbar',
+    partialNote: 'Nur Preisvergleich für vorhandene Artikel',
+    optTitle: 'Optimale Einkaufsroute',
+    optSub: 'Jedes Produkt beim günstigsten Supermarkt kaufen',
+    savedVsSingle: 'gespart gegenüber einem einzigen Laden',
+    totalOptimal: 'Gesamt optimal:',
+    tipMulti: 'Tipp: Trage Preise in mehreren Geschäften ein, um die genaue Ersparnis zu sehen.',
+    perUnit: '/Stk',
+    confirmClear: 'Alle Produkte löschen?',
+    priceEur: '(€)',
+  },
+  en: {
+    tagline: 'Where do I shop cheapest?',
+    myShops: 'My supermarkets',
+    addProduct: 'Add product',
+    product: 'Product',
+    qty: 'Qty',
+    placeholder: 'e.g. Whole milk 1L',
+    addBtn: '+ Add',
+    sampleBtn: '🧪 Load sample data',
+    clearBtn: '🗑 Clear list',
+    exportBtn: '⬇ Export CSV',
+    emptyTable: 'No products yet. Add items above.',
+    noData: 'Add products with prices to calculate the optimal shopping route.',
+    notice: 'Sample data loaded. Adjust prices or add your own products.',
+    bestChoice: 'BEST CHOICE',
+    of: 'of',
+    products: 'products',
+    notAvail: '⚠ Not available:',
+    saveVs: 'cheaper than',
+    fullCoverage: '✓ All items available',
+    partialNote: 'Price comparison for available items only',
+    optTitle: 'Optimal shopping route',
+    optSub: 'Buy each product at the cheapest supermarket',
+    savedVsSingle: 'saved vs. shopping at one store',
+    totalOptimal: 'Total optimal:',
+    tipMulti: 'Tip: Enter prices at multiple shops to see exact savings.',
+    perUnit: '/unit',
+    confirmClear: 'Delete all products?',
+    priceEur: '(€)',
+  }
+};
+let currentLang = localStorage.getItem('sparrechner_lang') || 'de';
+function t(key) { return LANG[currentLang][key] || key; }
+function toggleLang() {
+  currentLang = currentLang === 'de' ? 'en' : 'de';
+  localStorage.setItem('sparrechner_lang', currentLang);
+  document.documentElement.lang = currentLang;
+  renderAll();
+}
+</script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
 
@@ -49,13 +122,20 @@
   header {
     background: var(--text);
     color: #fff;
-    padding: 20px 24px 18px;
+    padding: 16px 24px;
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: 12px;
   }
   header h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
-  header span { font-size: 13px; color: #888; font-weight: 300; }
+  header span { font-size: 13px; color: #888; font-weight: 300; flex: 1; }
+  .lang-btn {
+    background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+    color: #fff; border-radius: 6px; padding: 5px 11px;
+    font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500;
+    cursor: pointer; transition: background 0.15s; letter-spacing: 0.05em;
+  }
+  .lang-btn:hover { background: rgba(255,255,255,0.22); }
 
   .main { max-width: 900px; margin: 0 auto; padding: 20px 16px 60px; }
 
@@ -255,18 +335,19 @@
 
 <header>
   <h1>SparRechner</h1>
-  <span>Wo kaufe ich am günstigsten?</span>
+  <span id="hTagline">Wo kaufe ich am günstigsten?</span>
+  <button class="lang-btn" onclick="toggleLang()" id="langBtn">EN</button>
 </header>
 
 <div class="main">
 
   <!-- Notice -->
   <div class="notice">
-    ℹ️ Beispieldaten vorgeladen. Preise anpassen oder eigene Produkte hinzufügen.
+    ℹ️ <span id="noticeText">Beispieldaten vorgeladen. Preise anpassen oder eigene Produkte hinzufügen.</span>
   </div>
 
   <!-- Shop selector -->
-  <div style="margin-bottom:8px; font-size:12px; color:var(--text3); font-weight:500; text-transform:uppercase; letter-spacing:.05em;">Meine Supermärkte</div>
+  <div class="shops-label" style="margin-bottom:8px; font-size:12px; color:var(--text3); font-weight:500; text-transform:uppercase; letter-spacing:.05em;">Meine Supermärkte</div>
   <div class="shops-row" id="shopsRow"></div>
 
   <!-- Add item form -->
@@ -288,9 +369,9 @@
 
   <!-- Actions -->
   <div class="actions">
-    <button class="act-btn" onclick="loadSample()">🧪 Beispieldaten laden</button>
-    <button class="act-btn" onclick="clearAll()">🗑 Liste leeren</button>
-    <button class="act-btn" onclick="exportCSV()">⬇ CSV exportieren</button>
+    <button class="act-btn" id="btnSample" onclick="loadSample()">🧪 Beispieldaten laden</button>
+    <button class="act-btn" id="btnClear" onclick="clearAll()">🗑 Liste leeren</button>
+    <button class="act-btn" id="btnExport" onclick="exportCSV()">⬇ CSV exportieren</button>
   </div>
 
   <!-- Items table -->
@@ -338,6 +419,9 @@ function getShop(id) { return SHOPS_DATA.find(s=>s.id===id); }
 function activeShopObjs() { return activeShops.map(id=>getShop(id)); }
 
 function renderShopSelector() {
+  document.getElementById('hTagline').textContent = t('tagline');
+  document.getElementById('langBtn').textContent = currentLang === 'de' ? 'EN' : 'DE';
+  document.querySelector('.shops-label').textContent = t('myShops');
   const row = document.getElementById('shopsRow');
   row.innerHTML = SHOPS_DATA.map(s => {
     const on = activeShops.includes(s.id);
@@ -349,24 +433,24 @@ function renderShopSelector() {
 
 function renderAddForm() {
   const form = document.getElementById('addForm');
-  // rebuild: item name, qty, then one price field per active shop, then button
+  document.querySelector('.add-form h2').textContent = t('addProduct');
   const priceFields = activeShopObjs().map(s =>
     `<div class="field">
-      <label style="color:${s.color}">${s.name} (€)</label>
+      <label style="color:${s.color}">${s.name} ${t('priceEur')}</label>
       <input type="number" id="price_${s.id}" placeholder="–" min="0" step="0.01" />
     </div>`
   ).join('');
   form.innerHTML = `
     <div class="field">
-      <label>Produkt</label>
-      <input type="text" id="newItem" placeholder="z.B. Vollmilch 1L" onkeydown="if(event.key==='Enter')addItem()" />
+      <label>${t('product')}</label>
+      <input type="text" id="newItem" placeholder="${t('placeholder')}" onkeydown="if(event.key==='Enter')addItem()" />
     </div>
     <div class="field">
-      <label>Menge</label>
+      <label>${t('qty')}</label>
       <input type="number" id="newQty" value="1" min="1" max="99" style="width:70px;" />
     </div>
     ${priceFields}
-    <button class="add-btn" onclick="addItem()">+ Hinzufügen</button>
+    <button class="add-btn" onclick="addItem()">${t('addBtn')}</button>
   `;
   form.style.setProperty('--shop-cols', activeShops.length);
 }
@@ -407,7 +491,7 @@ function fmt(v) { return v.toFixed(2).replace('.',',') + ' €'; }
 function renderTable() {
   const wrap = document.getElementById('tableWrap');
   if (!items.length) {
-    wrap.innerHTML = '<div class="empty-state">Noch keine Produkte. Füge oben Artikel hinzu.</div>';
+    wrap.innerHTML = `<div class="empty-state">${t('emptyTable')}</div>`;
     return;
   }
   const shops = activeShopObjs();
@@ -416,7 +500,6 @@ function renderTable() {
   ).join('');
 
   const rows = items.map(item => {
-    // find cheapest among active shops with a price
     const pricesAvail = activeShops.filter(sid => item.prices[sid] != null);
     const cheapestSid = pricesAvail.length
       ? pricesAvail.reduce((a,b) => item.prices[a] <= item.prices[b] ? a : b)
@@ -427,18 +510,18 @@ function renderTable() {
       if (p == null) return `<td class="price-cell no-price">–</td>`;
       const total = Math.round(p * item.qty * 100) / 100;
       const isBest = sid === cheapestSid && pricesAvail.length > 1;
-      return `<td class="price-cell ${isBest?'best-price':''}">${fmt(total)}${item.qty>1?`<br><span style="font-size:10px;color:var(--text3)">${fmt(p)}/Stk</span>`:''}</td>`;
+      return `<td class="price-cell ${isBest?'best-price':''}">${fmt(total)}${item.qty>1?`<br><span style="font-size:10px;color:var(--text3)">${fmt(p)}${t('perUnit')}</span>`:''}</td>`;
     }).join('');
 
     return `<tr>
       <td class="item-name">${item.name}<span class="qty-badge">×${item.qty}</span></td>
       ${priceCells}
-      <td><button class="del-btn" onclick="deleteItem(${item.id})" title="Löschen">×</button></td>
+      <td><button class="del-btn" onclick="deleteItem(${item.id})" title="×">×</button></td>
     </tr>`;
   }).join('');
 
   wrap.innerHTML = `<table>
-    <thead><tr><th>Produkt</th>${headers}<th></th></tr></thead>
+    <thead><tr><th>${t('product')}</th>${headers}<th></th></tr></thead>
     <tbody>${rows}</tbody>
   </table>`;
 }
@@ -459,44 +542,62 @@ function renderResults() {
       }
     });
     return { sid, shop, total: Math.round(total*100)/100, covered, missing };
-  }).filter(s => s.covered > 0)
-    .sort((a,b) => {
-      // sort by: covered desc, then total asc
-      if (b.covered !== a.covered) return b.covered - a.covered;
-      return a.total - b.total;
-    });
+  }).filter(s => s.covered > 0);
 
   if (!shopTotals.length) { el.innerHTML = ''; return; }
+
+  const maxCovered = Math.max(...shopTotals.map(s => s.covered));
+
+  // Score: among shops tied on coverage, rank by LOWEST total price.
+  // Among shops with fewer items, show separately — never crown a pricier shop winner.
+  shopTotals.sort((a, b) => {
+    if (a.covered !== b.covered) {
+      // prefer full coverage, but only if same-coverage group has a cheaper option
+      const aFull = a.covered === maxCovered;
+      const bFull = b.covered === maxCovered;
+      if (aFull && !bFull) return -1;
+      if (!aFull && bFull) return 1;
+    }
+    // same coverage level → cheaper wins
+    return a.total - b.total;
+  });
+
   const winner = shopTotals[0];
 
   el.innerHTML = shopTotals.map((s, i) => {
     const isWinner = i === 0;
-    const savings = i > 0 && s.covered === winner.covered
-      ? `Spare ${fmt(s.total - winner.total)} mehr bei ${winner.shop.name}`
-      : '';
+    // savings vs this shop compared to winner (only meaningful if same coverage)
+    let savingsNote = '';
+    if (!isWinner && s.covered === winner.covered) {
+      const diff = Math.round((s.total - winner.total)*100)/100;
+      if (diff > 0) savingsNote = `${fmt(diff)} ${t('saveVs')} ${winner.shop.name}`;
+    }
+    const coverageNote = s.covered === items.length
+      ? `<div style="font-size:11px;color:var(--green);margin-top:3px;">${t('fullCoverage')}</div>`
+      : s.covered < items.length && s.missing.length
+        ? `<div class="missing">${t('notAvail')} ${s.missing.slice(0,3).join(', ')}${s.missing.length>3?` +${s.missing.length-3}`:''}</div>`
+        : '';
     return `<div class="result-card ${isWinner?'winner':''}">
-      ${isWinner ? '<div class="winner-tag">BESTE WAHL</div>' : ''}
+      ${isWinner ? `<div class="winner-tag">${t('bestChoice')}</div>` : ''}
       <div class="shop-name" style="color:${s.shop.color}">${s.shop.name}</div>
       <div class="total">${fmt(s.total)}</div>
-      <div class="items-info">${s.covered} von ${items.length} Produkten</div>
-      ${s.missing.length ? `<div class="missing">⚠ Nicht verfügbar: ${s.missing.slice(0,3).join(', ')}${s.missing.length>3?` +${s.missing.length-3}`:''}</div>` : ''}
-      ${savings ? `<div style="font-size:11px;color:var(--text3);margin-top:4px;">${savings}</div>` : ''}
+      <div class="items-info">${s.covered} ${t('of')} ${items.length} ${t('products')}</div>
+      ${coverageNote}
+      ${savingsNote ? `<div style="font-size:11px;color:var(--text3);margin-top:4px;">+${savingsNote}</div>` : ''}
     </div>`;
   }).join('');
 }
 
 function renderOptimizer() {
   const el = document.getElementById('optimizer');
-
   if (!items.length) {
-    el.innerHTML = '<div class="no-data">Füge Produkte mit Preisen hinzu, um die optimale Einkaufsroute zu berechnen.</div>';
+    el.innerHTML = `<div class="no-data">${t('noData')}</div>`;
     return;
   }
 
-  // For each item, find the cheapest shop (among active shops with a price)
   let totalOptimal = 0;
   let totalBestSingle = Infinity;
-  const shopAllocs = {}; // sid -> [{item, price}]
+  const shopAllocs = {};
 
   items.forEach(item => {
     const avail = activeShops.filter(sid => item.prices[sid] != null);
@@ -509,14 +610,13 @@ function renderOptimizer() {
   });
   totalOptimal = Math.round(totalOptimal * 100) / 100;
 
-  // best single shop
   activeShops.forEach(sid => {
-    let t = 0, allCovered = true;
+    let tot = 0, allCovered = true;
     items.forEach(item => {
-      if (item.prices[sid] != null) t += item.prices[sid] * item.qty;
+      if (item.prices[sid] != null) tot += item.prices[sid] * item.qty;
       else allCovered = false;
     });
-    if (allCovered) totalBestSingle = Math.min(totalBestSingle, t);
+    if (allCovered) totalBestSingle = Math.min(totalBestSingle, tot);
   });
 
   const savings = totalBestSingle !== Infinity
@@ -542,16 +642,16 @@ function renderOptimizer() {
   }).join('');
 
   el.innerHTML = `
-    <h2>Optimale Einkaufsroute</h2>
-    <div class="sub">Jedes Produkt beim günstigsten Supermarkt kaufen</div>
+    <h2>${t('optTitle')}</h2>
+    <div class="sub">${t('optSub')}</div>
     ${savings !== null ? `
     <div class="opt-savings">
       <span class="amount">${fmt(savings)}</span>
-      <span class="label">gespart gegenüber einem einzigen Laden</span>
+      <span class="label">${t('savedVsSingle')}</span>
     </div>` : `
-    <div style="font-size:12px;color:var(--text2);margin-bottom:12px;">Tipp: Trage Preise in mehreren Geschäften ein, um die genaue Ersparnis zu sehen.</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:12px;">${t('tipMulti')}</div>
     `}
-    <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:8px;">Gesamt optimal: <strong style="color:var(--green);font-family:'DM Mono',monospace">${fmt(totalOptimal)}</strong></div>
+    <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:8px;">${t('totalOptimal')} <strong style="color:var(--green);font-family:'DM Mono',monospace">${fmt(totalOptimal)}</strong></div>
     <div class="shop-list">${shopSections}</div>
   `;
 }
@@ -562,6 +662,11 @@ function renderAll() {
   renderTable();
   renderResults();
   renderOptimizer();
+  // update static labels
+  document.getElementById('btnSample').textContent = t('sampleBtn');
+  document.getElementById('btnClear').textContent = t('clearBtn');
+  document.getElementById('btnExport').textContent = t('exportBtn');
+  document.getElementById('noticeText').textContent = t('notice');
 }
 
 function loadSample() {
@@ -582,7 +687,7 @@ function loadSample() {
 }
 
 function clearAll() {
-  if (confirm('Alle Produkte löschen?')) { items = []; save(); renderAll(); }
+  if (confirm(t('confirmClear'))) { items = []; save(); renderAll(); }
 }
 
 function exportCSV() {
