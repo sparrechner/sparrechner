@@ -36,6 +36,13 @@ const LANG = {
     perUnit: '/Stk',
     confirmClear: 'Alle Produkte löschen?',
     priceEur: '(€)',
+    comparisonLabel: 'Vergleich: Was kostet alles in einem einzigen Laden?',
+    cheapestSingle: 'GÜNSTIGSTER EINZELLADEN',
+    ifOnlyHere: 'Wenn du nur hier einkaufst',
+    moreExpensive: 'teurer als optimal',
+    onlyShop: 'Nur hier einkaufen',
+    singleShopOptimal: 'Ein Laden ist optimal — kein Split nötig',
+    singleShopSub: 'Alle Artikel verfügbar zum günstigsten Preis',
   },
   en: {
     tagline: 'Where do I shop cheapest?',
@@ -66,6 +73,13 @@ const LANG = {
     perUnit: '/unit',
     confirmClear: 'Delete all products?',
     priceEur: '(€)',
+    comparisonLabel: 'Comparison: what if you only shopped at one store?',
+    cheapestSingle: 'CHEAPEST SINGLE STORE',
+    ifOnlyHere: 'If you only shop here',
+    moreExpensive: 'more than optimal',
+    onlyShop: 'Shop here only',
+    singleShopOptimal: 'One store is already optimal — no split needed',
+    singleShopSub: 'All items available at the cheapest price',
   }
 };
 let currentLang = localStorage.getItem('sparrechner_lang') || 'de';
@@ -240,53 +254,26 @@ function toggleLang() {
   }
   .empty-state { padding: 32px; text-align: center; color: var(--text3); font-size: 13px; }
 
-  /* ── Results ── */
-  .results {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-  .result-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px;
-    position: relative;
-    overflow: hidden;
-  }
-  .result-card.winner {
-    border-color: var(--green-mid);
-    border-width: 2px;
-  }
-  .result-card .winner-tag {
-    position: absolute; top: 0; right: 0;
-    background: var(--green-mid); color: #fff;
-    font-size: 10px; font-weight: 600;
-    padding: 3px 10px; border-radius: 0 var(--radius) 0 var(--radius-sm);
-    letter-spacing: 0.05em;
-  }
-  .result-card .shop-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
-  .result-card .total { font-size: 28px; font-weight: 600; font-family: 'DM Mono', monospace; margin: 6px 0; }
-  .result-card .items-info { font-size: 12px; color: var(--text2); }
-  .result-card .missing { font-size: 11px; color: var(--amber); margin-top: 4px; }
-
-  /* ── Split shop optimizer ── */
+  /* ── Optimizer — hero block ── */
   .optimizer {
     background: var(--surface);
-    border: 1px solid var(--border);
+    border: 2px solid var(--green-mid);
     border-radius: var(--radius);
-    padding: 16px;
+    padding: 20px;
     margin-bottom: 20px;
   }
-  .optimizer h2 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .optimizer h2 { font-size: 16px; font-weight: 600; margin-bottom: 2px; }
   .optimizer .sub { font-size: 12px; color: var(--text2); margin-bottom: 14px; }
   .opt-savings {
     display: flex; align-items: baseline; gap: 8px;
-    margin-bottom: 12px;
+    background: var(--green-bg);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    margin-bottom: 14px;
   }
-  .opt-savings .amount { font-size: 32px; font-weight: 600; font-family: 'DM Mono', monospace; color: var(--green); }
-  .opt-savings .label { font-size: 13px; color: var(--text2); }
+  .opt-savings .amount { font-size: 36px; font-weight: 600; font-family: 'DM Mono', monospace; color: var(--green); }
+  .opt-savings .label { font-size: 13px; color: var(--green); }
+  .opt-total-row { font-size: 13px; font-weight: 500; color: var(--text2); margin-bottom: 12px; }
   .shop-list { display: flex; flex-direction: column; gap: 8px; }
   .shop-section {
     background: var(--bg);
@@ -298,6 +285,41 @@ function toggleLang() {
   .shop-section-total { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 600; color: var(--green); }
   .shop-item-row { font-size: 12px; color: var(--text2); display: flex; justify-content: space-between; padding: 2px 0; }
   .shop-item-price { font-family: 'DM Mono', monospace; color: var(--text); }
+  .single-shop-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--green-bg); color: var(--green);
+    border-radius: var(--radius-sm); padding: 8px 14px;
+    font-size: 13px; font-weight: 500; margin-bottom: 10px;
+  }
+  /* ── Comparison cards ── */
+  .results {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    position: relative;
+    overflow: hidden;
+    opacity: 0.9;
+  }
+  .result-card.cheapest-single { border-color: #aaa; border-width: 1.5px; opacity:1; }
+  .result-card .cheapest-tag {
+    position: absolute; top: 0; right: 0;
+    background: var(--text2); color: #fff;
+    font-size: 9px; font-weight: 600;
+    padding: 3px 8px; border-radius: 0 var(--radius) 0 var(--radius-sm);
+    letter-spacing: 0.05em;
+  }
+  .result-card .shop-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .result-card .total { font-size: 24px; font-weight: 600; font-family: 'DM Mono', monospace; margin: 4px 0; }
+  .result-card .items-info { font-size: 11px; color: var(--text2); }
+  .result-card .missing { font-size: 11px; color: var(--amber); margin-top: 4px; }
+  .result-card .extra-cost { font-size: 11px; color: var(--red); margin-top: 3px; font-family: 'DM Mono', monospace; }
 
   .no-data { padding: 20px; text-align: center; color: var(--text3); font-size: 13px; }
 
@@ -379,13 +401,14 @@ function toggleLang() {
     <div class="empty-state">Noch keine Produkte. Füge oben Artikel hinzu.</div>
   </div>
 
-  <!-- Per-shop totals -->
-  <div class="results" id="results"></div>
-
-  <!-- Split optimizer -->
+  <!-- Split optimizer — HERO: shown first -->
   <div class="optimizer" id="optimizer">
     <div class="no-data">Füge Produkte mit Preisen hinzu, um die optimale Einkaufsroute zu berechnen.</div>
   </div>
+
+  <!-- Per-shop comparison — shown below as reference -->
+  <div id="resultsLabel" style="display:none; font-size:12px; color:var(--text3); font-weight:500; text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px;"></div>
+  <div class="results" id="results"></div>
 
 </div>
 
@@ -528,62 +551,64 @@ function renderTable() {
 
 function renderResults() {
   const el = document.getElementById('results');
-  if (!items.length) { el.innerHTML = ''; return; }
+  const label = document.getElementById('resultsLabel');
+  if (!items.length) { el.innerHTML = ''; label.style.display='none'; return; }
 
+  // compute optimal total for comparison
+  let totalOptimal = 0;
+  items.forEach(item => {
+    const avail = activeShops.filter(sid => item.prices[sid] != null);
+    if (!avail.length) return;
+    const cheapSid = avail.reduce((a,b) => item.prices[a] <= item.prices[b] ? a : b);
+    totalOptimal += item.prices[cheapSid] * item.qty;
+  });
+  totalOptimal = Math.round(totalOptimal * 100) / 100;
+
+  // build per-shop totals (only items that shop has)
   const shopTotals = activeShops.map(sid => {
     const shop = getShop(sid);
     let total = 0, covered = 0, missing = [];
     items.forEach(item => {
-      if (item.prices[sid] != null) {
-        total += item.prices[sid] * item.qty;
-        covered++;
-      } else {
-        missing.push(item.name);
-      }
+      if (item.prices[sid] != null) { total += item.prices[sid] * item.qty; covered++; }
+      else missing.push(item.name);
     });
     return { sid, shop, total: Math.round(total*100)/100, covered, missing };
-  }).filter(s => s.covered > 0);
+  }).filter(s => s.covered > 0)
+    .sort((a,b) => {
+      // full coverage shops first, then by price
+      const aFull = a.covered === items.length;
+      const bFull = b.covered === items.length;
+      if (aFull !== bFull) return aFull ? -1 : 1;
+      return a.total - b.total;
+    });
 
-  if (!shopTotals.length) { el.innerHTML = ''; return; }
+  if (!shopTotals.length) { el.innerHTML = ''; label.style.display='none'; return; }
 
-  const maxCovered = Math.max(...shopTotals.map(s => s.covered));
+  // cheapest FULL-coverage shop = the one to highlight
+  const cheapestFull = shopTotals.find(s => s.covered === items.length);
 
-  // Score: among shops tied on coverage, rank by LOWEST total price.
-  // Among shops with fewer items, show separately — never crown a pricier shop winner.
-  shopTotals.sort((a, b) => {
-    if (a.covered !== b.covered) {
-      // prefer full coverage, but only if same-coverage group has a cheaper option
-      const aFull = a.covered === maxCovered;
-      const bFull = b.covered === maxCovered;
-      if (aFull && !bFull) return -1;
-      if (!aFull && bFull) return 1;
-    }
-    // same coverage level → cheaper wins
-    return a.total - b.total;
-  });
+  label.style.display = 'block';
+  label.textContent = t('comparisonLabel');
 
-  const winner = shopTotals[0];
+  el.innerHTML = shopTotals.map(s => {
+    const isCheapestFull = cheapestFull && s.sid === cheapestFull.sid;
+    const extraVsOptimal = s.covered === items.length
+      ? Math.round((s.total - totalOptimal) * 100) / 100
+      : null;
 
-  el.innerHTML = shopTotals.map((s, i) => {
-    const isWinner = i === 0;
-    // savings vs this shop compared to winner (only meaningful if same coverage)
-    let savingsNote = '';
-    if (!isWinner && s.covered === winner.covered) {
-      const diff = Math.round((s.total - winner.total)*100)/100;
-      if (diff > 0) savingsNote = `${fmt(diff)} ${t('saveVs')} ${winner.shop.name}`;
-    }
-    const coverageNote = s.covered === items.length
-      ? `<div style="font-size:11px;color:var(--green);margin-top:3px;">${t('fullCoverage')}</div>`
-      : s.covered < items.length && s.missing.length
-        ? `<div class="missing">${t('notAvail')} ${s.missing.slice(0,3).join(', ')}${s.missing.length>3?` +${s.missing.length-3}`:''}</div>`
-        : '';
-    return `<div class="result-card ${isWinner?'winner':''}">
-      ${isWinner ? `<div class="winner-tag">${t('bestChoice')}</div>` : ''}
+    return `<div class="result-card ${isCheapestFull ? 'cheapest-single' : ''}">
+      ${isCheapestFull ? `<div class="cheapest-tag">${t('cheapestSingle')}</div>` : ''}
       <div class="shop-name" style="color:${s.shop.color}">${s.shop.name}</div>
       <div class="total">${fmt(s.total)}</div>
       <div class="items-info">${s.covered} ${t('of')} ${items.length} ${t('products')}</div>
-      ${coverageNote}
-      ${savingsNote ? `<div style="font-size:11px;color:var(--text3);margin-top:4px;">+${savingsNote}</div>` : ''}
+      ${s.covered === items.length
+        ? `<div style="font-size:11px;color:var(--green);margin-top:3px;">${t('fullCoverage')}</div>`
+        : `<div class="missing">${t('notAvail')} ${s.missing.slice(0,2).join(', ')}${s.missing.length>2?` +${s.missing.length-2}`:''}</div>`}
+      ${extraVsOptimal !== null && extraVsOptimal > 0.005
+        ? `<div class="extra-cost">+${fmt(extraVsOptimal)} ${t('moreExpensive')}</div>`
+        : extraVsOptimal === 0 || (extraVsOptimal !== null && extraVsOptimal <= 0.005)
+          ? `<div style="font-size:11px;color:var(--green);margin-top:3px;">= ${t('singleShopOptimal')}</div>`
+          : ''}
     </div>`;
   }).join('');
 }
@@ -595,10 +620,9 @@ function renderOptimizer() {
     return;
   }
 
+  // Step 1: for each item find cheapest shop that has it
   let totalOptimal = 0;
-  let totalBestSingle = Infinity;
   const shopAllocs = {};
-
   items.forEach(item => {
     const avail = activeShops.filter(sid => item.prices[sid] != null);
     if (!avail.length) return;
@@ -610,22 +634,26 @@ function renderOptimizer() {
   });
   totalOptimal = Math.round(totalOptimal * 100) / 100;
 
+  // Step 2: find best single shop (must cover ALL items, lowest price)
+  let bestSingleSid = null, bestSingleTotal = Infinity;
   activeShops.forEach(sid => {
-    let tot = 0, allCovered = true;
-    items.forEach(item => {
-      if (item.prices[sid] != null) tot += item.prices[sid] * item.qty;
-      else allCovered = false;
-    });
-    if (allCovered) totalBestSingle = Math.min(totalBestSingle, tot);
+    const allCovered = items.every(item => item.prices[sid] != null);
+    if (!allCovered) return;
+    const tot = items.reduce((s,item) => s + item.prices[sid] * item.qty, 0);
+    if (tot < bestSingleTotal) { bestSingleTotal = tot; bestSingleSid = sid; }
   });
+  bestSingleTotal = Math.round(bestSingleTotal * 100) / 100;
 
-  const savings = totalBestSingle !== Infinity
-    ? Math.max(0, Math.round((totalBestSingle - totalOptimal) * 100) / 100)
+  // Step 3: is split actually better than best single shop?
+  const splitShops = Object.keys(shopAllocs);
+  const isSingleOptimal = splitShops.length === 1;
+  const savings = bestSingleSid
+    ? Math.max(0, Math.round((bestSingleTotal - totalOptimal) * 100) / 100)
     : null;
 
   const shopSections = Object.entries(shopAllocs).map(([sid, allocs]) => {
     const shop = getShop(sid);
-    const shopTotal = allocs.reduce((s,a)=>s+a.lineTotal,0);
+    const shopTotal = Math.round(allocs.reduce((s,a)=>s+a.lineTotal,0)*100)/100;
     const rows = allocs.map(a =>
       `<div class="shop-item-row">
         <span>${a.item.name}${a.item.qty>1?` ×${a.item.qty}`:''}</span>
@@ -634,26 +662,34 @@ function renderOptimizer() {
     ).join('');
     return `<div class="shop-section" style="border-left-color:${shop.color}">
       <div class="shop-section-head">
-        <span style="color:${shop.color}">${shop.name}</span>
-        <span class="shop-section-total">${fmt(Math.round(shopTotal*100)/100)}</span>
-      </div>
-      ${rows}
+        <span style="color:${shop.color};font-weight:600">${shop.name}</span>
+        <span class="shop-section-total">${fmt(shopTotal)}</span>
+      </div>${rows}
     </div>`;
   }).join('');
 
-  el.innerHTML = `
-    <h2>${t('optTitle')}</h2>
-    <div class="sub">${t('optSub')}</div>
-    ${savings !== null ? `
-    <div class="opt-savings">
-      <span class="amount">${fmt(savings)}</span>
-      <span class="label">${t('savedVsSingle')}</span>
-    </div>` : `
-    <div style="font-size:12px;color:var(--text2);margin-bottom:12px;">${t('tipMulti')}</div>
-    `}
-    <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:8px;">${t('totalOptimal')} <strong style="color:var(--green);font-family:'DM Mono',monospace">${fmt(totalOptimal)}</strong></div>
-    <div class="shop-list">${shopSections}</div>
-  `;
+  if (isSingleOptimal) {
+    const shop = getShop(splitShops[0]);
+    el.innerHTML = `
+      <h2>${t('optTitle')}</h2>
+      <div class="sub">${t('singleShopSub')}</div>
+      <div class="single-shop-badge">✓ ${shop ? shop.name : ''} — ${t('singleShopOptimal')}</div>
+      <div class="opt-total-row">${t('totalOptimal')} <strong style="color:var(--green);font-family:'DM Mono',monospace">${fmt(totalOptimal)}</strong></div>
+      <div class="shop-list">${shopSections}</div>`;
+  } else {
+    el.innerHTML = `
+      <h2>${t('optTitle')}</h2>
+      <div class="sub">${t('optSub')}</div>
+      ${savings !== null && savings > 0 ? `
+      <div class="opt-savings">
+        <span class="amount">${fmt(savings)}</span>
+        <span class="label">${t('savedVsSingle')}</span>
+      </div>` : savings === 0 ? `
+      <div class="single-shop-badge">✓ ${t('singleShopOptimal')}</div>` : `
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px;">${t('tipMulti')}</div>`}
+      <div class="opt-total-row">${t('totalOptimal')} <strong style="color:var(--green);font-family:'DM Mono',monospace">${fmt(totalOptimal)}</strong></div>
+      <div class="shop-list">${shopSections}</div>`;
+  }
 }
 
 function renderAll() {
